@@ -148,6 +148,7 @@ object SbtJasminePlugin extends Plugin {
     appJsLibDir := Seq(),
     jasmineTestDir := Seq(),
     jasmineConfFile := Seq(),
+    jasmineHtmlIncludes := Seq(),
     jasmineRequireJsFile := Seq(),
     jasmineRequireConfFile := Seq(),
     jasmineGenRunner <<= jasmineGenRunnerTask,
