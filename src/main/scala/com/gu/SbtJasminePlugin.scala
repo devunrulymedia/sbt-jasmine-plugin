@@ -13,7 +13,6 @@ object SbtJasminePlugin extends Plugin {
   lazy val jasmineTestDir = SettingKey[Seq[File]]("jasmineTestDir", "Path to directory containing the /specs and /mocks directories")
   lazy val appJsDir = SettingKey[Seq[File]]("appJsDir", "the root directory where the application js files live")
   lazy val appJsLibDir = SettingKey[Seq[File]]("appJsLibDir", "the root directory where the application's js library files live")
-  lazy val jasmineHtmlIncludes = SettingKey[Seq[File]]("jasmineHtmlIncludes", "the html files to be included before tests are executed")
   lazy val jasmineConfFile = SettingKey[Seq[File]]("jasmineConfFile", "the js file that loads your js context and configures jasmine")
   lazy val jasmineRequireJsFile = SettingKey[Seq[File]]("jasmineRequireJsFile", "the require.js file used by the application")
   lazy val jasmineRequireConfFile = SettingKey[Seq[File]]("jasmineRequireConfFile", "the js file that configures require to find your dependencies")
@@ -57,7 +56,7 @@ object SbtJasminePlugin extends Plugin {
     if (errorCount > 0) throw new JasmineFailedException(errorCount.toInt)
   }
 
-  def jasmineGenRunnerTask = (jasmineOutputDir, jasmineTestDir, appJsDir, appJsLibDir, jasmineRequireJsFile, jasmineRequireConfFile, jasmineHtmlIncludes, streams) map { (outDir, testJsRoots, appJsRoots, appJsLibRoots, requireJss, requireConfs, htmlIncludes, s) =>
+  def jasmineGenRunnerTask = (jasmineOutputDir, jasmineTestDir, appJsDir, appJsLibDir, jasmineRequireJsFile, jasmineRequireConfFile, streams) map { (outDir, testJsRoots, appJsRoots, appJsLibRoots, requireJss, requireConfs, s) =>
 
     s.log.info("generating runner...")
 
@@ -71,7 +70,6 @@ object SbtJasminePlugin extends Plugin {
       appJsLibRoot <- appJsLibRoots
       requireJs <- requireJss
       requireConf <- requireConfs
-      htmlIncludes <- htmlIncludes
     } {
       val runnerString = loadRunnerTemplate.format(
         testRoot.getAbsolutePath,
@@ -79,8 +77,7 @@ object SbtJasminePlugin extends Plugin {
         appJsLibRoot.getAbsolutePath,
         requireJs.getAbsolutePath,
         requireConf.getAbsolutePath,
-        generateSpecRequires(testRoot),
-        generateHtmlIncludes(htmlIncludes)
+        generateSpecRequires(testRoot)
       )
 
       IO.write(outDir / "runner.html", runnerString)
@@ -88,15 +85,6 @@ object SbtJasminePlugin extends Plugin {
     }
     s.log.info("output to: file://" + (outDir / "runner.html" getAbsolutePath) )
 
-  }
-
-  def generateHtmlIncludes(htmlIncludes: File) = {
-    val cl = this.getClass.getClassLoader
-    val is = cl.getResourceAsStream(htmlIncludes.getAbsolutePath)
-    val template = scala.io.Source.fromInputStream(is).getLines().mkString("\n")
-
-    is.close
-    template
   }
 
   def loadRunnerTemplate = {
@@ -148,7 +136,6 @@ object SbtJasminePlugin extends Plugin {
     appJsLibDir := Seq(),
     jasmineTestDir := Seq(),
     jasmineConfFile := Seq(),
-    jasmineHtmlIncludes := Seq(),
     jasmineRequireJsFile := Seq(),
     jasmineRequireConfFile := Seq(),
     jasmineGenRunner <<= jasmineGenRunnerTask,
